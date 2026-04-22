@@ -31,6 +31,19 @@ codex-bridge serve
 
 Sem o broker ativo, o `big-brain chat` continua funcionando em modo offline.
 
+Para integrar o Big Brain automaticamente nas proximas conversas com agents
+Codex, rode uma vez:
+
+```bash
+big-brain setup-agent
+```
+
+Esse comando localiza e atualiza arquivos de instrucoes personalizadas dos
+agents, instala uma skill `big-brain`, um plugin local com hooks de sessao e um
+marketplace local. A partir dai, a propria IA deve inicializar o projeto,
+atualizar o contexto e capturar notas sem voce precisar pedir isso a cada
+conversa.
+
 ## Comandos
 
 ### `big-brain init`
@@ -61,6 +74,75 @@ Durante o chat:
 /notas    # lista as notas
 /status   # exibe o project.json atual
 /sair     # encerra
+```
+
+### `big-brain context`
+
+Imprime um bloco Markdown com o contexto do projeto e notas globais. E pensado
+para agents usarem no inicio de uma tarefa. Se o projeto ainda nao estiver
+inicializado, cria `.big-brain/project.json` automaticamente.
+
+```bash
+big-brain context
+```
+
+### `big-brain capture`
+
+Captura informacoes duraveis de uma conversa de agent, detecta gatilhos e cria
+notas no vault global.
+
+```bash
+printf '%s\n' "Nao pode remover notas sem confirmacao." | big-brain capture --stdin
+big-brain capture "Decidimos usar o vault global para todos os projetos."
+```
+
+### `big-brain setup-agent`
+
+Instala a integracao global para agents Codex:
+
+```bash
+big-brain setup-agent
+```
+
+Depois disso, em novas conversas, o agent deve chamar `big-brain context` no
+inicio da tarefa e `big-brain capture --stdin` quando voce declarar regras,
+decisoes, pedidos, bugs, features ou contexto que valem para o futuro.
+
+O setup escreve esse comportamento nas instrucoes personalizadas globais:
+
+```text
+~/.codex/AGENTS.md
+~/.claude/CLAUDE.md          # quando ~/.claude existir
+~/.cursor/rules/big-brain.mdc # quando ~/.cursor existir
+```
+
+O trecho instalado diz explicitamente para a IA:
+
+- rodar `big-brain context` no inicio de tarefas em repositorios;
+- usar a memoria retornada antes de decisoes de projeto;
+- rodar `big-brain capture --stdin` quando voce declarar algo duravel;
+- registrar um resumo antes da resposta final se algo importante ainda nao foi
+  capturado;
+- nao pedir para voce rodar esses comandos.
+
+Tambem instala um plugin local inspirado no modelo do `claude-brain`, como
+camada extra de automacao:
+
+| Hook | Quando | Acao |
+|---|---|---|
+| `SessionStart` | abertura/retomada de sessao | roda `big-brain hook session-start`, inicializa o projeto se preciso e atualiza `~/.big-brain/agent-context.md` |
+| `SessionEnd` | fim de sessao | roda `big-brain hook session-end` e tenta capturar notas a partir do transcript fornecido pelo agent |
+| `PreCompact` | antes de compactacao automatica | roda `big-brain hook pre-compact` para salvar informacoes duraveis antes da compactacao |
+
+Arquivos instalados pelo setup:
+
+```text
+~/.codex/AGENTS.md
+~/.claude/CLAUDE.md          # se Claude estiver configurado
+~/.codex/skills/big-brain/SKILL.md
+~/plugins/big-brain/.codex-plugin/plugin.json
+~/plugins/big-brain/hooks.json
+~/.agents/plugins/marketplace.json
 ```
 
 ### `big-brain notes ...`
@@ -129,6 +211,19 @@ vale em qualquer fluxo, inclusive no retry de pagamento.
 
 ```
 big-brain/                 # raiz do projeto
+|- .codex-plugin/
+|  `- plugin.json          # manifesto de plugin Codex
+|- .claude-plugin/
+|  `- plugin.json          # manifesto compatível com plugin Claude
+|- hooks.json              # hooks Codex
+|- hooks/
+|  `- hooks.json           # hooks em layout Claude-style
+|- scripts/
+|  |- big-brain-session-start.sh
+|  |- big-brain-session-end.sh
+|  `- big-brain-pre-compact.sh
+|- skills/
+|  `- big-brain/SKILL.md
 |- main.py                 # entry point Typer (modulo top-level)
 |- core/
 |  |- config.py            # merge global + local
@@ -140,6 +235,7 @@ big-brain/                 # raiz do projeto
 |- cli/
 |  |- init.py
 |  |- chat.py
+|  |- agent.py
 |  |- notes_cmd.py
 |  `- status.py
 |- utils/

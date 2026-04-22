@@ -25,7 +25,7 @@ big-brain/
 |  |- linker.py     # [[wikilinks]] bidirecionais
 |  |- git_sync.py   # add/commit/pull --rebase/push
 |  `- session.py    # estado em memoria, LLMClient codex-bridge, detect_triggers
-|- cli/             # comandos Typer: init, chat, notes_cmd, status
+|- cli/             # comandos Typer: init, chat, agent, notes_cmd, status
 |- utils/           # slugify, frontmatter, ui (Rich)
 |- tests/
 `- pyproject.toml
@@ -45,6 +45,42 @@ mypy .                       # type check (strict)
 ```
 
 Apos `pip install -e .`, o comando `big-brain` fica disponivel no `PATH`.
+
+## Integracao automatica com agents
+
+`big-brain setup-agent` e o bootstrap unico para conversas futuras com agents
+Codex. Ele atualiza instrucoes personalizadas e tambem segue o modelo do
+`claude-brain`: plugin + skills + hooks de ciclo de sessao. Ele instala:
+
+- Um bloco gerenciado em `~/.codex/AGENTS.md`.
+- O mesmo bloco em `~/.claude/CLAUDE.md`, se `~/.claude` existir.
+- O mesmo bloco em `~/.cursor/rules/big-brain.mdc`, se `~/.cursor` existir.
+- A skill `~/.codex/skills/big-brain/SKILL.md`.
+- O plugin local `~/plugins/big-brain`.
+- A entrada de marketplace em `~/.agents/plugins/marketplace.json`.
+
+Depois disso, agents devem usar:
+
+- `big-brain context` no inicio de tarefas para carregar memoria do projeto.
+- `big-brain capture --stdin` quando a conversa trouxer regra, decisao,
+  pedido, bug, feature ou contexto duravel.
+
+Esses comandos inicializam `.big-brain/project.json` automaticamente quando o
+projeto ainda nao foi iniciado. Nao use `big-brain chat` dentro de uma conversa
+com agent; o agent atual ja e o chat.
+
+O bloco de instrucoes diz explicitamente que a IA deve rodar esses comandos por
+conta propria: o usuario nao deve precisar lembrar `big-brain init`, `context`,
+`capture` nem os comandos internos de hook.
+
+Hooks instalados pelo plugin:
+
+- `SessionStart`: roda `big-brain hook session-start --stdin`, inicializa o
+  projeto se preciso e atualiza `~/.big-brain/agent-context.md`.
+- `SessionEnd`: roda `big-brain hook session-end --stdin` e captura notas a
+  partir do transcript quando o runtime fornece `transcript_path`.
+- `PreCompact`: roda `big-brain hook pre-compact --stdin` para preservar notas
+  antes de compactacao automatica.
 
 ## Convencoes obrigatorias
 
