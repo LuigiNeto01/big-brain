@@ -1,0 +1,45 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v big-brain >/dev/null 2>&1; then big-brain hook session-start --stdin || true; fi",
+            "timeout": 20,
+            "async": true,
+            "statusMessage": "Loading Big Brain memory..."
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v big-brain >/dev/null 2>&1; then big-brain hook session-end --stdin || true; fi",
+            "timeout": 30,
+            "async": true,
+            "statusMessage": "Saving Big Brain memory..."
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v big-brain >/dev/null 2>&1; then big-brain hook pre-compact --stdin || true; fi",
+            "timeout": 20,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

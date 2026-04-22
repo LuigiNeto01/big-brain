@@ -1,0 +1,40 @@
+{
+  "name": "big-brain",
+  "version": "0.1.0",
+  "description": "Automatic project memory for coding agents using a global Markdown note vault.",
+  "author": {
+    "name": "Luigi Neto",
+    "email": "luigicode01@gmail.com"
+  },
+  "homepage": "https://github.com/luigineto/big-brain",
+  "repository": "https://github.com/luigineto/big-brain",
+  "license": "MIT",
+  "keywords": [
+    "memory",
+    "notes",
+    "agents",
+    "codex",
+    "automation"
+  ],
+  "skills": "./skills/",
+  "hooks": "./hooks.json",
+  "interface": {
+    "displayName": "Big Brain",
+    "shortDescription": "Automatic Markdown memory for coding agents",
+    "longDescription": "Big Brain initializes projects, keeps a global Markdown vault, refreshes agent context on session start, and captures durable rules, decisions, bugs, features, and requests from agent transcripts.",
+    "developerName": "Luigi Neto",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Use Big Brain memory for this repository.",
+      "Capture the durable decisions from this conversation.",
+      "Show me this project's memory notes."
+    ],
+    "brandColor": "#2563EB",
+    "screenshots": []
+  }
+}
